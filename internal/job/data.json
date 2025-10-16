@@ -1,0 +1,10 @@
+{
+  "id": "job-12345",
+  "type": "data_processing",
+  "payload": {
+    "filename": "input.csv",
+    "bucket": "data-bucket",
+    "priority": "high"
+  },
+  "created_at": "2025-10-15T10:00:00Z"
+}
