@@ -8,7 +8,10 @@ import (
 
 type Config struct {
 	// could load local env vars and then parse through
-
+	RedisAddr    string `env:"REDIS_ADDR,required"`
+	ServicePort  string `env:"SERVICE_PORT" envDefault:"8080"`
+	NumWorkers   int    `env:"WORKER_COUNT" envDefault:"5"`
+	JobQueueName string `env:"JOB_QUEUE_NAME" envDefault:"job_queue"`
 }
 
 func LoadConfig() (*Config, error) {

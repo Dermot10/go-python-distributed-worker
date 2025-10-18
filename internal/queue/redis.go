@@ -10,28 +10,27 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Client struct {
-	cfg   *config.Config
-	redis *redis.Client
+type RedisQueueClient struct {
+	Rdb *redis.Client
 }
 
-func NewRedisClient(cfg *config.Config) (*Client, error) {
-	rds := redis.NewClient(&redis.Options{
-		Addr: "redis:6379", // docker compose container of redis instance, move to config
+func NewQueueService(cfg *config.Config) (*RedisQueueClient, error) {
+	rdb := redis.NewClient(&redis.Options{
+		// Addr: cfg.RedisAddr,
 	})
-	log.Println("Connected to Redis successfully")
-	return &Client{
-		cfg:   cfg,
-		redis: rds,
-	}, nil
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		return nil, err
+	}
+	log.Print("Successfully connected to redis")
+	return &RedisQueueClient{Rdb: rdb}, nil
 }
 
-func (c *Client) PeekQueue(queueName string) ([]string, error) {
-	return c.redis.LRange(context.Background(), queueName, 0, -1).Result()
+func (r *RedisQueueClient) PeekQueue(queueName string) ([]string, error) {
+	return r.Rdb.LRange(context.Background(), queueName, 0, -1).Result()
 }
 
-func (c *Client) PopJob(queueName string) (*job.Job, error) {
-	val, err := c.redis.BRPop(context.Background(), 0, queueName).Result()
+func (r *RedisQueueClient) PopJob(queueName string) (*job.Job, error) {
+	val, err := r.Rdb.BRPop(context.Background(), 0, queueName).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -40,4 +39,12 @@ func (c *Client) PopJob(queueName string) (*job.Job, error) {
 		return nil, err
 	}
 	return &job, nil
+}
+
+func (r *RedisQueueClient) PushJob(ctx context.Context, queueName string, job job.Job) error {
+	data, err := json.Marshal(job)
+	if err != nil {
+		return err
+	}
+	return r.Rdb.LPush(ctx, queueName, data).Err()
 }

@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"go-distributed-worker/internal/config"
+	"go-distributed-worker/internal/handler"
 	"go-distributed-worker/internal/queue"
+	"go-distributed-worker/internal/service"
+	"go-distributed-worker/internal/worker"
 	"log"
 	"net/http"
 	"time"
@@ -13,6 +16,38 @@ import (
 )
 
 type Dependencies struct { //needed for service
+
+}
+
+func setUpServiceRunner(ctx context.Context, log *log.Logger, cfg *config.Config) (*service.Service, error) {
+
+	qs, err := setUpQueueService(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	ws, err := setUpWorkerService(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return service.NewService(cfg, log, qs, ws), nil
+}
+
+func setUpQueueService(cfg *config.Config) (*queue.RedisQueueClient, error) {
+	qs, err := queue.NewQueueService(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return qs, nil
+}
+
+func setUpWorkerService(cfg *config.Config) (*worker.Worker, error) {
+	ws, err := worker.NewWorkerService()
+	if err != nil {
+		return nil, err
+	}
+	return ws, nil
 }
 
 func setUpMux() *http.ServeMux {
@@ -20,22 +55,14 @@ func setUpMux() *http.ServeMux {
 	return mux
 }
 
-func registerRoutes(mux *http.ServeMux, rdb *queue.Client) {
-	mux.HandleFunc("/enqueue", queue.EnqueueHandler(rdb))
+func registerRoutes(mux *http.ServeMux, qs service.QueueService) {
+	mux.HandleFunc("/enqueue", handler.EnqueueHandler(qs))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
 	mux.Handle("/metrics", promhttp.Handler()) // server interface satisfied by promhttp handler
-}
-
-func setUpRedis(cfg *config.Config) (*queue.Client, error) {
-	rdb, err := queue.NewRedisClient(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return rdb, nil
 }
 
 func serveHealthAndMetrics(ctx context.Context, mux *http.ServeMux) error {
