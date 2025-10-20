@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"go-distributed-worker/internal/config"
 	"go-distributed-worker/internal/job"
 	"go-distributed-worker/internal/metrics"
 	"go-distributed-worker/internal/service"
@@ -16,10 +17,13 @@ import (
 // process is dummy function currently only printing
 
 type Worker struct {
+	cfg *config.Config
 }
 
-func NewWorkerService() (*Worker, error) {
-	return &Worker{}, nil
+func NewWorkerService(cfg *config.Config) (*Worker, error) {
+	return &Worker{
+		cfg: cfg,
+	}, nil
 }
 
 func (w *Worker) RunWorkerPool(ctx context.Context, qs service.QueueService, numWorkers int) error {
@@ -41,7 +45,7 @@ func (w *Worker) worker(ctx context.Context, id int, qs service.QueueService) {
 			log.Printf("Worker %d: shutting down\n", id)
 			return
 		default:
-			job, err := qs.PopJob("job_queue")
+			job, err := qs.PopJob(w.cfg.JobQueueName)
 			if err != nil {
 				log.Printf("Worker %d error: %v\n", id, err)
 				continue

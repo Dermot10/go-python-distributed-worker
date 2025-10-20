@@ -23,7 +23,7 @@ func EnqueueHandler(qs service.QueueService) http.HandlerFunc {
 			return
 		}
 
-		if err := qs.PushJob(r.Context(), "job_queue", j); err != nil {
+		if err := qs.PushJob(r.Context(), "job_queue", &j); err != nil {
 			http.Error(w, "failed to enqueue job", http.StatusInternalServerError)
 			return
 		}

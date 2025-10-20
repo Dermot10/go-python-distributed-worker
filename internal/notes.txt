@@ -1,4 +1,4 @@
-enqueue endpoint receieves jobs (json payload, ids etc) from fastapi (client), it triggers the go service
+enqueue endpoint receieves jobs (json payload, ids etc) from python (client), which triggers the go service
 
 GO validates req (not type but populated)
 enqueue req into redis (LPUSH)

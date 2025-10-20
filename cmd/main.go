@@ -37,8 +37,7 @@ func main() {
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-
-		return nil
+		return s.Execute(ctx)
 	})
 
 	g.Go(func() error {

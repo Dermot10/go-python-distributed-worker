@@ -43,7 +43,7 @@ func setUpQueueService(cfg *config.Config) (*queue.RedisQueueClient, error) {
 }
 
 func setUpWorkerService(cfg *config.Config) (*worker.Worker, error) {
-	ws, err := worker.NewWorkerService()
+	ws, err := worker.NewWorkerService(cfg)
 	if err != nil {
 		return nil, err
 	}

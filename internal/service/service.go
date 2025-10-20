@@ -20,7 +20,7 @@ type WorkerService interface {
 }
 
 type QueueService interface {
-	PushJob(ctx context.Context, queueName string, job job.Job) error
+	PushJob(ctx context.Context, queueName string, job *job.Job) error
 	PopJob(queueName string) (*job.Job, error)
 	PeekQueue(queueName string) ([]string, error)
 }
@@ -42,14 +42,20 @@ func (s *Service) Execute(ctx context.Context) error {
 }
 
 func (s *Service) runService(ctx context.Context) error {
-	// Example: run worker pool
+
+	if err := s.viewQueue(ctx, s.cfg.JobQueueName); err != nil {
+		return fmt.Errorf("failed to view job queue: %w", err)
+	}
+
 	if err := s.ws.RunWorkerPool(ctx, s.QS, s.cfg.NumWorkers); err != nil {
 		return fmt.Errorf("worker pool failed: %w", err)
 	}
+
 	return nil
 }
 
 func (s *Service) viewQueue(ctx context.Context, queueName string) error {
+
 	vals, err := s.QS.PeekQueue(queueName)
 	if err != nil {
 		return err

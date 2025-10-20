@@ -16,7 +16,7 @@ type RedisQueueClient struct {
 
 func NewQueueService(cfg *config.Config) (*RedisQueueClient, error) {
 	rdb := redis.NewClient(&redis.Options{
-		// Addr: cfg.RedisAddr,
+		Addr: cfg.RedisAddr,
 	})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (r *RedisQueueClient) PopJob(queueName string) (*job.Job, error) {
 	return &job, nil
 }
 
-func (r *RedisQueueClient) PushJob(ctx context.Context, queueName string, job job.Job) error {
+func (r *RedisQueueClient) PushJob(ctx context.Context, queueName string, job *job.Job) error {
 	data, err := json.Marshal(job)
 	if err != nil {
 		return err
