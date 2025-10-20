@@ -1,1 +1,3 @@
 client/venv
+.env
+internal/notes.txt
